@@ -61,47 +61,31 @@ select * from authors;
 select * from author_books;
 select * from loans;
 
---3 consultas
+--3.- consultas
 --A
 select title, number_pages from books where number_pages < 300;
+
 --B
 select name_author, last_name, birth from authors where birth > 1970;
+
 --C
-select title 
-from books B
-inner join loans L 
-on B.isbn = L.book_isbn;
-
-select book_isbn, count(book_isbn) AS total
-from loans L
-group by book_isbn
-order by total desc
-limit 1;
-
--- intentos
 select title 
 from (select book_isbn, count(book_isbn) AS total
 from loans P
 group by book_isbn
 order by total desc) as x
-inner join loans L 
-on x.isbn = L.book_isbn;
-
---dsghgrgf
-select book_isbn, count(book_isbn) AS total
-from (select title 
-from books B
-inner join loans L 
-on B.isbn = L.book_isbn) as x
-group by book_isbn
-order by total desc
+inner join books B 
+on B.isbn = x.book_isbn
 limit 1;
 
-
 --D
-select L.*, B.loan_days, B.title
-from loans as L 
-inner join Books as B 
-on L.book_isbn = B.isbn;
---where extract(day from B.fecha) = 06;
-
+SELECT name_partner, precio_multa
+FROM (SELECT partner_id, begin_date,return_true,loan_days,
+    case when DATE_PART('day',  return_true::timestamp -( begin_date + loan_days)::timestamp) <= 0 then 0 
+    else
+    DATE_PART('day',  return_true::timestamp -( begin_date + loan_days)::timestamp) * 100 end 
+    as precio_multa
+    FROM loans, books
+    WHERE 
+    loans.book_isbn = books.isbn) as multados, partners
+WHERE multados.partner_id = partners.id;
